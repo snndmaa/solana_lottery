@@ -45,6 +45,10 @@ mod lottery {
         let ticket: &mut Account<'_, Ticket> = &mut ctx.accounts.ticket;
         let buyer: &Signer<'_> = &ctx.accounts.buyer;
 
+        if lottery.winner_id.is_some() {
+            return err!(LotteryError::WinnerAlreadyExists)
+        }
+
         // Transfer sol to Lottery PDA
         invoke(
             &transfer(
@@ -67,6 +71,12 @@ mod lottery {
 
         msg!("Ticket id: {}", ticket.id);
         msg!("Ticket authority: {}", ticket.authority);
+
+        Ok(())
+    }
+
+    fn pick_winner(ctx: Context<BuyTicket>) -> Result<()> {
+        // Select a random ticket as a winner and set winner_id to that ticket
 
         Ok(())
     }
