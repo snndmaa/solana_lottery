@@ -4,15 +4,14 @@ use anchor_lang::{
 };
 
 mod constants;
+mod error;
 
-use crate::constants::*;
+use crate::{constants::*, error::*};
 
 declare_id!("3BG3Ymop2mWUyd3twAnb42y57WvbFQ6xGuua7TVvDU6K");
 
 #[program]
 mod lottery {
-    use instruction::BuyTicket;
-
     use super::*;   // Getting our previously specified imports as is
 
     pub fn init_master(_ctx: Context<InitMaster>) -> Result<()> {
@@ -41,7 +40,35 @@ mod lottery {
     }
 
     pub fn buy_ticket(ctx: Context<BuyTicket>, lottery_id: u32) -> Result<()> {
+        // When ticket is bought, ticket account is created and ticket price gets paid
+        let lottery: &mut Account<'_, Lottery> = &mut ctx.accounts.lottery;
+        let ticket: &mut Account<'_, Ticket> = &mut ctx.accounts.ticket;
+        let buyer: &Signer<'_> = &ctx.accounts.buyer;
 
+        // Transfer sol to Lottery PDA
+        invoke(
+            &transfer(
+                &buyer.key(),
+                &lottery.key(),
+                lottery.ticket_price,
+            ),
+            &[
+                buyer.to_account_info(),
+                lottery.to_account_info(),
+                ctx.accounts.system_program.to_account_info()
+            ],
+        )?;
+
+        lottery.last_ticket_id += 1;
+        
+        ticket.id = lottery.last_ticket_id;
+        ticket.lottery_id = lottery_id;
+        ticket.authority = buyer.key();
+
+        msg!("Ticket id: {}", ticket.id);
+        msg!("Ticket authority: {}", ticket.authority);
+
+        Ok(())
     }
 }
 
@@ -89,7 +116,30 @@ pub struct CreateLottery<'info> {
 #[derive(Accounts)]
 #[instruction(lottery_id: u32)]
 pub struct BuyTicket<'info> {
+    #[account(
+        mut,
+        seeds = [LOTTERY_SEED.as_bytes(), &lottery_id.to_le_bytes()],
+        bump,
+    )]
+    pub lottery: Account<'info, Lottery>,
     
+    #[account(
+        init,
+        payer = buyer,
+        space = 4 + 4 + 32 + 8,
+        seeds = [
+            TICKET_SEED.as_bytes(), 
+            lottery.key().as_ref(),
+            &(lottery.last_ticket_id + 1).to_le_bytes(),
+        ], 
+        bump,
+    )]
+    pub ticket: Account<'info, Ticket>,
+
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
 
@@ -106,4 +156,11 @@ pub struct Lottery {
     pub last_ticket_id: u32,
     pub winner_id: Option<u32>,
     pub claimed: bool, 
+}
+
+#[account]
+pub struct Ticket {
+    pub id: u32,
+    pub authority: Pubkey,
+    pub lottery_id: u32,
 }
