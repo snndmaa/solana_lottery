@@ -1,6 +1,6 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{clock::Clock, hash::Hash, program::invoke, system_instruction::transfer},
+    solana_program::{clock::Clock, hash::hash, program::invoke, system_instruction::transfer},
 };
 
 mod constants;
@@ -75,8 +75,23 @@ mod lottery {
         Ok(())
     }
 
-    fn pick_winner(ctx: Context<BuyTicket>) -> Result<()> {
+    pub fn pick_winner(ctx: Context<BuyTicket>, _lottery_id: u32) -> Result<()> {
         // Select a random ticket as a winner and set winner_id to that ticket
+        let lottery = &mut ctx.accounts.lottery;
+
+        // Pick a pseudo-random winner
+        let clock = Clock::get()?;
+        let pseudo_random_number = ((u64::from_le_bytes(
+            <[u8; 8]>::try_from(&hash(&clock.unix_timestamp.to_be_bytes()).to_bytes()[..8])
+            .unwrap(),
+            ) * clock.slot)
+            % u32::MAX as u64) as u32;
+
+        let winner_id = (pseudo_random_number % lottery.last_ticket_id) + 1;
+
+        lottery.winner_id = Some(winner_id);
+
+        msg!("Winner id: {}", winner_id);
 
         Ok(())
     }
@@ -152,6 +167,21 @@ pub struct BuyTicket<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(lottery_id: u32)]
+pub struct PickWinner<'info> {
+    #[account(
+        mut,
+        seeds = [LOTTERY_SEED.as_bytes(), &lottery_id.to_le_bytes()],
+        bump,
+        has_one = authority, // Only one account can pick the winner and this is the account that created the lottery.
+    )]
+    pub lottery: Account<'info, Lottery>,
+
+    pub authority: Signer<'info>,
+
+
+}
 
 #[account]
 pub struct Master {
