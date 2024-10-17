@@ -8,7 +8,7 @@ mod error;
 
 use crate::{constants::*, error::*};
 
-declare_id!("3BG3Ymop2mWUyd3twAnb42y57WvbFQ6xGuua7TVvDU6K");
+declare_id!("EeZzxgF5D3w7AM1VW8BdfUS2KxSYaBh44YRezVirC9cs");
 
 #[program]
 mod lottery {

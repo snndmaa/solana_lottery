@@ -1,17 +1,20 @@
 [toolchain]
 
 [features]
-seeds = false
+seeds = true
 skip-lint = false
 
+[programs.devnet]
+solana_lottery = "G5bNUW3eVemVzTCcGBCrThuemhhpkqBmKhXong4vJ2KA"
+
 [programs.localnet]
-solana_lottery = "3BG3Ymop2mWUyd3twAnb42y57WvbFQ6xGuua7TVvDU6K"
+solana_lottery = "ZTLNjX8cGJA5gMQ39txDSxUL6s4gywMe5S9V6yRpyrf"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "/home/snndmaa/.config/solana/id.json"
 
 [scripts]

@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Lottery } from "../target/types/lottery";
 import { assert } from "chai";
+import * as fs from "fs";
 
 describe("lottery", () => {
   // Configure the client to use the local cluster.
@@ -18,7 +19,10 @@ describe("lottery", () => {
   let ticketPDA: anchor.web3.PublicKey;
   let ticketBump: number;
 
-  const buyer1Keypair = anchor.web3.Keypair.generate();
+  // Load the buyer1 keypair from a JSON file
+  const buyer1Keypair = anchor.web3.Keypair.fromSecretKey(
+    new Uint8Array(JSON.parse(fs.readFileSync("/mnt/c/Solana/solana_lottery/buyer-one-keypair.json", "utf8")))
+  );
 
   const MASTER_SEED = "master";
   const LOTTERY_SEED = "lottery";
@@ -34,9 +38,11 @@ describe("lottery", () => {
       payer: buyer1Keypair.publicKey,
       systemProgram: anchor.web3.SystemProgram.programId,
     })
+    .signers([buyer1Keypair])
     .rpc();
 
     const master = await program.account.master.fetch(masterPDA);
+    console.log(master)
     assert.ok(master.lastId === 0);
   });
 });
