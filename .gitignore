@@ -6,4 +6,5 @@ target
 node_modules
 test-ledger
 .yarn
-.buyer-one-keypair.json
+buyer-one-keypair.json
+extra

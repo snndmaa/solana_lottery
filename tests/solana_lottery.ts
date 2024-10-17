@@ -4,6 +4,19 @@ import { Lottery } from "../target/types/lottery";
 import { assert } from "chai";
 import * as fs from "fs";
 
+const fundAccount = async (keypair) => {
+  const connection = anchor.getProvider().connection;
+
+  // Request an airdrop of 2 SOL to the buyer1 account (adjust as needed)
+  const airdropSignature = await connection.requestAirdrop(
+    keypair.publicKey,
+    anchor.web3.LAMPORTS_PER_SOL * 2 // Airdrop 2 SOL (adjust the amount as necessary)
+  );
+
+  // Confirm the transaction
+  await connection.confirmTransaction(airdropSignature);
+}
+
 describe("lottery", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
@@ -24,11 +37,14 @@ describe("lottery", () => {
     new Uint8Array(JSON.parse(fs.readFileSync("/mnt/c/Solana/solana_lottery/buyer-one-keypair.json", "utf8")))
   );
 
+  fundAccount(buyer1Keypair); // Might fail if on devnet
+  
+
   const MASTER_SEED = "master";
   const LOTTERY_SEED = "lottery";
   const TICKET_SEED = "ticket";
 
-  it("Initialize Master Account", async () => {
+  it("Initializes Master Account", async () => {
     [ masterPDA, masterBump ] = await anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from(MASTER_SEED)],
       program.programId
@@ -45,4 +61,10 @@ describe("lottery", () => {
     console.log(master)
     assert.ok(master.lastId === 0);
   });
+
+  it("Creates a Lottery", async () => {
+    const ticketPrice = new anchor.BN(1_000_000); //1 SOL
+    
+    // Derive the Lottery PDA based on the master.last_id
+  })
 });

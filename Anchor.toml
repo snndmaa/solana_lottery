@@ -14,7 +14,7 @@ solana_lottery = "ZTLNjX8cGJA5gMQ39txDSxUL6s4gywMe5S9V6yRpyrf"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "/home/snndmaa/.config/solana/id.json"
 
 [scripts]
