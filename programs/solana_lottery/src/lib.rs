@@ -168,7 +168,7 @@ pub struct CreateLottery<'info> {
     #[account(
         init,
         payer = authority,
-        space = 4 + 32 + 4 + 1 + 4 + 1 + 8, // This is based on the types defined in the lottery struct and how much space they actually take
+        space = 4 + 32 + 8 + 4 + 4 + 1 + 8, // This is based on the types defined in the lottery struct and how much space they actually take
         seeds = [LOTTERY_SEED.as_bytes(), &(master.last_id + 1).to_le_bytes()],
         bump,
     )]
