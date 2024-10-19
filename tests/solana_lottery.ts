@@ -91,7 +91,38 @@ describe("lottery", () => {
 
     const lottery = await program.account.lottery.fetch(lotteryPDA);
     console.log(lottery);
+
     assert.ok(lottery.id === 1);
     assert.ok(lottery.ticketPrice.eq(ticketPrice));
+  })
+
+  it("Buys a Ticket", async () => {
+    const lotteryId = 1;
+
+    const ticketId = 1;
+    const [ticketPDA, ticketBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(TICKET_SEED),
+        lotteryPDA.toBuffer(),
+        new anchor.BN(ticketId).toArrayLike(Buffer, "le", 4)
+      ],
+      program.programId
+    );
+    
+    await program.methods.buyTicket(lotteryId)
+    .accounts({
+      lottery: lotteryPDA,
+      ticket: ticketPDA,
+      buyer: buyer1Keypair.publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId,
+    })
+    .signers([buyer1Keypair])
+    .rpc();
+
+    const ticket = await program.account.ticket.fetch(ticketPDA);
+    console.log(ticket);
+
+    assert.ok(ticket.lotteryId === lotteryId);
+    assert.ok(ticket.authority.equals(buyer1Keypair.publicKey))
   })
 });
